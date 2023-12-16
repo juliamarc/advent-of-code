@@ -1,74 +1,58 @@
-import math
 import re
-import itertools
+
+def matches(text, numbers):
+    states = "."
+    for nr in numbers:
+        for i in range(int(nr)):
+            states += "#"
+        states += "."
+
+    states_dict = {0: 1}
+    new_dict = {}
+    for char in text:
+        for state in states_dict:
+            if char == "?":
+                if state + 1 < len(states):
+                    new_dict[state + 1] = new_dict.get(state + 1, 0) + states_dict[state]
+                if states[state] == ".":
+                    new_dict[state] = new_dict.get(state, 0) + states_dict[state]
+
+            elif char == ".":
+                if state + 1 < len(states) and states[state + 1] == ".":
+                    new_dict[state + 1] = new_dict.get(state + 1, 0) + states_dict[state]
+                if states[state] == ".":
+                    new_dict[state] = new_dict.get(state, 0) + states_dict[state]
+
+            elif char == "#":
+                if state + 1 < len(states) and states[state + 1] == "#":
+                    new_dict[state + 1] = new_dict.get(state + 1, 0) + states_dict[state]
+
+        states_dict = new_dict
+        new_dict = {}
+
+    return states_dict.get(len(states) - 1, 0) + states_dict.get(len(states) - 2, 0)
 
 def part_1():
-    with open('input_example') as file:
+    with open('input') as file:
         lines = list(map(
             lambda r: (
                 r[0],
                 list(map(int, re.findall(r'\d+', r[1])))),
             map(lambda l: l.split(' '), file.read().splitlines())))
 
-    sum_valid_combs = 0
-    for l in lines:
-        original_record = l[0]
-        known_broken_cnt = original_record.count('#')
-        expected_broken_cnt = sum(l[1])
-        missing_broken_cnt = expected_broken_cnt - known_broken_cnt
-        unknown_idx = [m.start() for m in re.finditer(r'\?', original_record)]
-        all_combs = list(itertools.combinations(unknown_idx, missing_broken_cnt))
-        valid_combs = 0
-        for comb in all_combs:
-            original_record_copy = list(original_record)
-            for i in range(len(original_record_copy)):
-                if i in comb:
-                    original_record_copy[i] = '#'
-                elif original_record_copy[i] == '?':
-                    original_record_copy[i] = '.'
-            original_record_copy = ''.join(original_record_copy)
-
-            comb_broken_cnt = list(map(len, re.findall(r'#+', original_record_copy)))
-            if comb_broken_cnt == l[1]:
-                valid_combs += 1
-
-        sum_valid_combs += valid_combs
+    sum_valid_combs = sum(map(lambda l: matches(l[0], l[1]),lines))
 
     print("--- Part One ---", sum_valid_combs, sep='\n')
 
 def part_2():
-    with open('input_example') as file:
+    with open('input') as file:
         lines = list(map(
             lambda r: (
                 '?'.join([r[0]]*5),
                 list(map(int, re.findall(r'\d+', r[1])))*5),
             map(lambda l: l.split(' '), file.read().splitlines())))
-    
-    sum_valid_combs = 0
-    for l in lines:
-        original_record = l[0]
-        known_broken_cnt = original_record.count('#')
-        expected_broken_cnt = sum(l[1])
-        missing_broken_cnt = expected_broken_cnt - known_broken_cnt
-        unknown_idx = [m.start() for m in re.finditer(r'\?', original_record)]
-        all_combs = list(itertools.combinations(unknown_idx, missing_broken_cnt))
-        valid_combs = 0
-        for comb in all_combs:
-            original_record_copy = list(original_record)
-            for i in range(len(original_record_copy)):
-                if i in comb:
-                    original_record_copy[i] = '#'
-                elif original_record_copy[i] == '?':
-                    original_record_copy[i] = '.'
-            original_record_copy = ''.join(original_record_copy)
 
-            comb_broken_cnt = list(map(len, re.findall(r'#+', original_record_copy)))
-            if comb_broken_cnt == l[1]:
-                valid_combs += 1
-
-        sum_valid_combs += valid_combs
-        
-        # print(*list(lines), sep='\n')
+    sum_valid_combs = sum(map(lambda l: matches(l[0], l[1]),lines))
 
     print("--- Part Two ---", sum_valid_combs, sep='\n')
 
